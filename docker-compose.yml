@@ -1,0 +1,56 @@
+version: '3.8'
+
+name: service-cache-container
+services:
+  app1:
+    container_name: "service-cache-app-1"
+    build:
+      dockerfile: dockerfile
+    image: service-cache:latest
+    ports:
+      - '9091:8080'
+    networks:
+      - cloud-network
+    links:
+      - "book-db"
+    environment:
+      - DB_USER=root
+      - DB_PWD=root
+      - DB_URL=jdbc:postgresql://book-db:5432/book
+
+  app2:
+    container_name: "service-cache-app-2"
+    build:
+      dockerfile: dockerfile
+    image: service-cache:latest
+    ports:
+      - '9092:8080'
+    networks:
+      - cloud-network
+    links:
+      - "book-db"
+    environment:
+      - DB_USER=root
+      - DB_PWD=root
+      - DB_URL=jdbc:postgresql://book-db:5432/book
+
+  book-db:
+    image: postgres:15
+    container_name: "book-db"
+    environment:
+      - POSTGRES_DB=book
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    ports:
+      - '5432:5432'
+    networks:
+      - cloud-network
+    volumes:
+      - book:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+volumes:
+  book:
+    driver: local
+
+networks:
+  cloud-network:
