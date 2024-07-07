@@ -1,0 +1,19 @@
+hazelcast:
+  cluster-name: book
+  map:
+    book:
+      max-idle-seconds: 3600
+      time-to-live-seconds: 360
+      eviction:
+        eviction-policy: LRU
+        max-size-policy: PER_NODE
+        size: 300
+  network:
+    join:
+      multicast:
+        enabled: false
+      tcp-ip:
+        enabled: true
+        member-list:
+          - 192.168.1.12:5701
+          - 192.168.1.13:5701

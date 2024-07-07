@@ -5,14 +5,14 @@ services:
   app1:
     container_name: "service-cache-app-1"
     build:
-      dockerfile: dockerfile
-    image: service-cache:latest
+      dockerfile: Dockerfile
     ports:
       - '9091:8080'
     networks:
       - cloud-network
     links:
       - "book-db"
+      - "book-cache"
     environment:
       - DB_USER=root
       - DB_PWD=root
@@ -21,18 +21,42 @@ services:
   app2:
     container_name: "service-cache-app-2"
     build:
-      dockerfile: dockerfile
-    image: service-cache:latest
+      dockerfile: Dockerfile
     ports:
       - '9092:8080'
     networks:
       - cloud-network
     links:
       - "book-db"
+      - "book-cache"
     environment:
       - DB_USER=root
       - DB_PWD=root
       - DB_URL=jdbc:postgresql://book-db:5432/book
+
+  book-cache:
+    image: hazelcast/hazelcast:5.4-jdk17
+    container_name: "book-cache"
+    ports:
+      - "5701:5701"
+    environment:
+      - HZ_CLUSTERNAME=book
+      - HAZELCAST_CONFIG=/tmp/config/hazelcast.yaml
+      # - HZ_NETWORK_PUBLICADDRESS=192.168.1.12:5701
+    volumes:
+      - ./hazelcast.yaml:/tmp/config/hazelcast.yaml:ro
+    networks:
+      - cloud-network
+
+  management-center:
+    image: hazelcast/management-center:5.4.1
+    ports:
+      - "8081:8080"
+    environment:
+      - MC_DEFAULT_CLUSTER=book
+      - MC_DEFAULT_CLUSTER_MEMBERS=book-cache
+    networks:
+      - cloud-network
 
   book-db:
     image: postgres:15
